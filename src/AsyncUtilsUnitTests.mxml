@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	xmlns:fluint="http://www.digitalprimates.net/2008/fluint"
+	creationComplete="startTestProcess(event)"
+	width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import org.unitTests.testsuit.AsyncUtilsTestSuit;
+			
+			protected function startTestProcess( event:Event ) : void
+			{
+				var suiteArray:Array = new Array();
+					suiteArray.push( new AsyncUtilsTestSuit() );
+				
+				testRunner.startTests( suiteArray );
+			}
+			
+		]]>
+	</mx:Script>	
+	
+	<fluint:TestResultDisplay width="100%" height="100%" />
+	<fluint:TestRunner id="testRunner"/>
 	
 </mx:WindowedApplication>
