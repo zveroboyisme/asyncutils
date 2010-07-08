@@ -21,41 +21,77 @@ package org.asyncutils
 			_chain = chain;
 			_commitOnly = commitOnly;
 			_once = once;
+			startWatching();
 		}
-		
+
 		public function reset():void
 		{
 			if (_changeWatcher)
 			{
 				_changeWatcher.unwatch();
 				_changeWatcher = null;
-			}	
-		}
-		
-		
-		private function startWatching():void
-		{
-			_changeWatcher = ChangeWatcher.watch(_host, _chain, onChange, _commitOnly);
-		}
-		
-		private function onChange(event:PropertyChangeEvent):void
-		{
-			// test agains condition
-			// if passes, notify executor
+			}
 		}
 
-/*
-		public function Is(f:Function):BindingExecutor
+		public function isConditionStillMet():Boolean
 		{
-			if (!_executor)
+			trace("+ BP.isConditionMet() ");
+			var property:* = _host;
+
+			if (_chain is Array)
 			{
-				_executor = new BindingExecutor();
+				for each (var propName:String in _chain)
+				{
+					property = property[propName];
+				}
 			}
-			ChangeWatcher.watch(host, chain, f, commitOnly);
-			
-			return _executor;
+			else
+			{
+				property = property[_chain];
+			}
+
+
+			var met:Boolean = _condition.call(null, property)
+			trace("- BP.isConditionMet() property = " + property);
+			return met;
 		}
-		*/
+
+		internal function startWatching():void
+		{
+			if (_changeWatcher == null || _changeWatcher.isWatching() == false)
+			{
+				trace(" BP.startWatching() ");
+				_changeWatcher = ChangeWatcher.watch(_host, _chain, onChange, _commitOnly);
+			}
+		}
+
+		private function onChange(event:PropertyChangeEvent):void
+		{
+			trace("+ BP.onChange() property old: = " + event.oldValue + " new: " + event.newValue);
+			// test against condition
+			// if passes, notify executor
+			if (_condition.call(null, event.newValue))
+			{
+				_executor.conditionMet(this);
+			}
+			if (_once)
+			{
+				reset();
+			}
+		}
+
+	/*
+	   public function Is(f:Function):BindingExecutor
+	   {
+	   if (!_executor)
+	   {
+	   _executor = new BindingExecutor();
+	   }
+	   ChangeWatcher.watch(host, chain, f, commitOnly);
+
+	   return _executor;
+	   }
+	 */
 
 	}
 }

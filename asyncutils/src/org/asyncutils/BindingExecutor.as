@@ -1,6 +1,7 @@
 package org.asyncutils
 {
 	import flash.events.Event;
+	import flash.utils.Dictionary;
 
 	public class BindingExecutor
 	{
@@ -11,6 +12,8 @@ package org.asyncutils
 		
 		private var _predicates:Array = [];
 		private var _executeOnce:Boolean = true;
+		private var _mapPredicates:Dictionary = new Dictionary(true);
+		private var _predicatesWithMetConditions:Number = 0;
 		
 		public function BindingExecutor()
 		{
@@ -52,13 +55,13 @@ package org.asyncutils
 			return this;
 		}
 
-		private function every(host:Object, condition:Function, chain:Object, commitOnly:Boolean = false):BindingExecutor
+		private function every(condition:Function, host:Object, chain:Object, commitOnly:Boolean = false):BindingExecutor
 		{
 			_predicates.push( new BindingPredicate(this, condition, host, chain, commitOnly) );
 			return this;
 		}
 
-		public function once(host:Object, condition:Function, chain:Object, commitOnly:Boolean = false):BindingExecutor
+		public function once(condition:Function, host:Object, chain:Object, commitOnly:Boolean = false):BindingExecutor
 		{
 			_predicates.push( new BindingPredicate(this, condition, host, chain, commitOnly) );
 			return this;
@@ -75,7 +78,54 @@ package org.asyncutils
 		
 		internal function conditionMet(predicate:BindingPredicate):void
 		{
+			trace("+ BE.conditionMet " + _predicatesWithMetConditions );
+			var conditionMet:Boolean = false;
 			
+			if (_mapPredicates[predicate] == null)
+			{
+				conditionMet = true;
+				_mapPredicates[predicate] = conditionMet;
+				_predicatesWithMetConditions++;
+			}
+			
+			
+			trace("  BE.conditionMet " + _predicatesWithMetConditions );
+			if (_predicatesWithMetConditions == _predicates.length)
+			{
+				// check if all conditions are still met
+				var predicatesWithUnmetCondition:Array = findAllPredicatesWithUnmetConditions();	
+				for each (var predicate:BindingPredicate in predicatesWithUnmetCondition)
+				{
+					predicate.startWatching();
+				}
+			}
+			
+			if (_predicatesWithMetConditions == _predicates.length)
+			{
+				_functionToExecute.apply(null, _agrsToPass);
+			}
+			
+			trace("- BE.conditionMet " + _predicatesWithMetConditions );
+		}
+		
+		// Assumes that all predicates have reported that their respective conditions have been met
+		// however, that may not be true for some of the predicates any more
+		private function findAllPredicatesWithUnmetConditions():Array
+		{
+			function checkConditionMet(item:BindingPredicate, index:int, array:Array):Boolean
+			{
+				var conditionStillMet:Boolean =  item.isConditionStillMet();
+				if (conditionStillMet == false)
+				{
+					// remove them from the map
+					// and decrement met count
+					delete _mapPredicates[item];
+					_predicatesWithMetConditions--;	
+				}
+				return !conditionStillMet;
+			}
+			
+			return _predicates.filter(checkConditionMet);
 		}
 	}
 }
