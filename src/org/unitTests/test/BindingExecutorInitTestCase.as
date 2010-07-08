@@ -1,7 +1,7 @@
 package org.unitTests.test
 {
 	import net.digitalprimates.fluint.tests.TestCase;
-	
+
 	import org.asyncutils.BindingExecutor;
 
 	public class BindingExecutorInitTestCase extends TestCase
@@ -34,7 +34,7 @@ package org.unitTests.test
 				assertTrue(true);
 			}
 		}
-		
+
 
 
 
