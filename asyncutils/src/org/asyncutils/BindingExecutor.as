@@ -26,12 +26,20 @@ package org.asyncutils
 		
 		public function reset():Boolean
 		{
-			return false;	
+			for each(var predicate:BindingPredicate in _predicates)
+			{
+				predicate.reset();
+			}
+			return true;	
 		}
 		
 		public function startWatching():Boolean
 		{
-			return false;
+			for each(var predicate:BindingPredicate in _predicates)
+			{
+				predicate.startWatching();
+			}
+			return true;;
 		}
 		
 		
