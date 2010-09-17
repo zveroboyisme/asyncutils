@@ -21,7 +21,7 @@ package org.asyncutils
 			_chain = chain;
 			_commitOnly = commitOnly;
 			_once = once;
-			startWatching();
+			//startWatching();
 		}
 
 		public function reset():void
@@ -60,8 +60,15 @@ package org.asyncutils
 		{
 			if (_changeWatcher == null || _changeWatcher.isWatching() == false)
 			{
-				trace(" BP.startWatching() ");
-				_changeWatcher = ChangeWatcher.watch(_host, _chain, onChange, _commitOnly);
+				if (isConditionStillMet())
+				{
+					notifyExecutor();
+				}
+				else
+				{
+					trace(" BP.startWatching() ");
+					_changeWatcher = ChangeWatcher.watch(_host, _chain, onChange, _commitOnly);
+				}
 			}
 		}
 
@@ -72,8 +79,14 @@ package org.asyncutils
 			// if passes, notify executor
 			if (_condition.call(null, event.newValue))
 			{
-				_executor.conditionMet(this);
+				notifyExecutor();
 			}
+		}
+
+
+		private function notifyExecutor():void
+		{
+			_executor.conditionMet(this);
 			if (_once)
 			{
 				reset();

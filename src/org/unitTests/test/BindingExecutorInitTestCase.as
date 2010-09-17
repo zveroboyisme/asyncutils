@@ -82,6 +82,7 @@ package org.unitTests.test
 					trace(" setting dellmeA.num to 25 ");
 					a.num = 25
 				}, 200);
+			_bindingExecutor.startWatching();
 		}
 
 		private function executeOnEquals():void

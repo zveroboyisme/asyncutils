@@ -24,6 +24,11 @@ package org.asyncutils
 			}
 		}
 		
+		public function get predicatesCount():uint
+		{
+			return _predicates.length;
+		}
+		
 		public function reset():Boolean
 		{
 			for each(var predicate:BindingPredicate in _predicates)
