@@ -40,10 +40,18 @@ package org.asyncutils
 
 			if (_chain is Array)
 			{
-				for each (var propName:String in _chain)
+				function buildProperty(propName:String, index:int, array:Array):Boolean
 				{
-					property = property[propName];
+					if (property)
+					{
+						property = property[propName];
+					}
+					
+					return (property != null);
 				}
+				
+				_chain.every(buildProperty);
+				
 			}
 			else
 			{
