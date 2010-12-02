@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="asdoc" default="main" basedir=".">
+	<!-- The pathname of the build properties file -->
+	<property name="build.properties.file" value="${basedir}/build.properties"/>
+	<!-- The Location of Flex on your Computer 
+	<property name="Flex.dir" location="/usr/local/Adobe_Flex_Builder_Linux"/>
+	-->
+
+	<!-- The Location of FlexSDK on your Computer 
+	<property name="FlexSDK.dir" location="${Flex.dir}\sdks\3.3"/>
+	-->
+
+	<!-- The Location of ASDocs on your Computer 
+	<property name="AsDocs.dir" location="${FlexSDK.dir}\bin\asdoc.exe"/>
+-->
+	<!--
+	The Location of your Application Classes on your Computer
+	NOTE: This Path should be reletive to the build.xml file.
+	NOTE: ${basedir} is an ant property that represents the directory holding the build.xml file
+	NOTE: I have encountered issues with this folder containing Spaces
+	-->
+	<property name="AppClasses.dir" location="${basedir}\.."/>
+
+	<!--
+	The Location you wish to output to on your Computer
+	NOTE: I have encountered issues with this folder containing Spaces
+	NOTE: This location gets DELETED and re-generated each time the build is run
+	-->
+	<property name="Output.dir" location="${basedir}\..\docs\api" />
+	<property name="Target.dir" location="${basedir}/target" />
+
+
+	<!-- The Location of ASDocs on your Computer -->
+	<property name="FlexLib-dir" location="${basedir}\..\libs"/>
+
+	<property name="ExcludeClasses.list" value="com.cynergysystems.tango.ServiceLocator" />
+
+	<!-- Execute the ASDoc Compile -->
+	<target name="main" depends="clean,compile-lib" description="Lib build"/>
+	<!--
+	DELETE the existing output folder and files and then re-generate the output folder
+	-->
+	<target name="clean">
+		<delete dir="${Output.dir}" failOnError="false" includeEmptyDirs="true"/>
+		<delete dir="${Target.dir}" failOnError="false" includeEmptyDirs="true"/>
+		<mkdir dir="${Output.dir}"/>
+	</target>
+
+	<!--
+
+	Run the ASDoc executable and generate the ASDocs to the new output folder
+	-->
+	<target name="compile" depends="init-build-properties, setup-properties">
+		<echo>${AsDocs.dir}</echo>
+		<echo>Appclasses.dir = ${AppClasses.dir}</echo>
+		<echo>FlexSdk dir ${FlexSDK.dir}</echo>
+		<exec executable="${AsDocs.dir}" failonerror="true">
+			<arg line='-doc-sources "${AppClasses.dir}"'/>
+			<arg line='-source-path "${AppClasses.dir}"'/>
+			<arg line='-library-path "${FlexLib-dir}"'/>
+			<arg line="-library-path '${FlexSDK.dir}/frameworks/libs'"/>
+			<arg line="-library-path '${FlexSDK.dir}/frameworks/locale/en_US'"/>
+			<arg line='-window-title "Window Title"'/>
+			<arg line='-main-title "Main Title"' />
+			<arg line='-output "${Output.dir}"'/>
+		</exec>
+	</target>
+
+	<!-- mxmlc needs the FLEX_HOME prop 
+	<property name="FLEX_HOME" value="${FlexSDK.dir}"/> 
+	<taskdef resource="flexTasks.tasks" classpath="${FlexSDK.dir}/ant/lib/flexTasks.jar" />
+	-->
+	<!--Task to compile the app -->
+	<target name="setup-properties" depends="init-build-properties, load-properties">
+		<echo>FlexSDK.dir = ${FlexSDK.dir}</echo>
+		<property name="FLEX_HOME" value="${FlexSDK.dir}"/> 
+		<property name="AsDocs.dir" location="${FlexSDK.dir}\bin\asdoc.exe"/>
+		<taskdef resource="flexTasks.tasks" classpath="${FlexSDK.dir}/ant/lib/flexTasks.jar" />
+		<echo>FLEX_HOME = ${FLEX_HOME}</echo>
+	</target>
+
+	<target name="compile-lib" depends="setup-properties">
+
+		<antcall target="compile-swc">
+			<param name="swf.name" value="asyncutils"/>
+		</antcall>
+		<!--
+		<antcall target="compile-mainApp">
+		</antcall>
+		-->
+
+	</target>	
+
+	<target name="compile-swc" depends="setup-properties">
+		<echo/>
+		<echo>Compiling ${AppClasses.dir}/${swf.name}.swc</echo>
+		<echo/>
+		<compc
+			output="target/${swf.name}.swc"
+			actionscript-file-encoding="UTF-8"
+			keep-generated-actionscript="false"
+			include-classes="asyncutils org.asyncutils.BindingExecutor"
+			incremental="true"
+			debug="true"
+			show-actionscript-warnings="false"
+			show-deprecation-warnings="false"
+			show-binding-warnings="false"
+			>
+			<!-- Get default compiler options.
+			<load-config filename="${FlexSDK.dir}/frameworks/flex-config.xml"/>
+			-->
+
+			<!-- List of path elements that form the roots of ActionScript
+			class hierarchies. -->
+			<source-path path-element="${FlexSDK.dir}/frameworks"/>
+			<source-path path-element="${AppClasses.dir}/src"/>
+
+
+			<!-- List of SWC files or directories that contain SWC files. -->
+			<compiler.library-path dir="${FlexSDK.dir}/frameworks" append="true">
+				<include name="libs" />
+			</compiler.library-path>
+
+			<compiler.library-path dir=".." append="true">
+				<include name="libs" />
+			</compiler.library-path>
+
+		</compc>
+
+	</target>
+	<!-- show-actionscript-warnings="false" -->
+	<target name="compile-swf" depends="setup-properties">
+		<echo/>
+		<echo>Compiling ${AppClasses.dir}/${swf.name}.mxml</echo>
+		<echo/>
+		<mxmlc
+			file="${AppClasses.dir}/${swf.name}.mxml"
+			output="target/${swf.name}.swf"
+			configname="air"
+			actionscript-file-encoding="UTF-8"
+			keep-generated-actionscript="false"
+			incremental="true"
+			debug="true"
+			show-actionscript-warnings="false"
+			show-deprecation-warnings="false"
+			show-binding-warnings="false"
+			>
+			<!-- Get default compiler options.
+			<load-config filename="${FlexSDK.dir}/frameworks/flex-config.xml"/>
+			-->
+			<keep-as3-metadata name="ArrayElementType"/>
+
+			<license product="flexbuilder3" serial-number="137740098326355870879621"/>
+			<license product="flexbuilder2" serial-number="130714227449039955255141"/>
+
+			<!-- List of path elements that form the roots of ActionScript
+			class hierarchies. -->
+			<source-path path-element="${FlexSDK.dir}/frameworks"/>
+			<source-path path-element="${AppClasses.dir}"/>
+
+
+			<!-- List of SWC files or directories that contain SWC files. -->
+			<compiler.library-path dir="${FlexSDK.dir}/frameworks" append="true">
+				<include name="libs" />
+			</compiler.library-path>
+
+			<compiler.library-path dir=".." append="true">
+				<include name="libs" />
+			</compiler.library-path>
+
+			<!-- Set size of output SWF file. -->
+			<default-size width="800" height="600" />
+		</mxmlc>
+
+	</target>
+
+
+
+		<!--
+	<target name="compile-mainApp" depends="setup-properties">
+		<antcall target="compile-swf">
+			<param name="swf.name" value="AdminApp"/>
+		</antcall>
+
+
+	</target>
+		-->
+
+
+	<target name="check-valid-flex-sdk-dir">
+		<available file="${FlexSDK.dir}/frameworks" type="dir" property="valid-flex-sdk-dir"/>
+	</target>
+
+	<target name="check-build-properties-file-exists">
+		<available file="${build.properties.file}" property="build-properties-file-exists"/>
+	</target>
+
+	<target name="load-properties">
+		<property file="${build.properties.file}"/>
+	</target>
+
+	<target name="init-build-properties" 
+		depends="check-build-properties-file-exists" 
+		unless="build-properties-file-exists">
+		<!-- building java app to configure build.properties file 
+		<javac source="1.6" target="1.6" srcdir="C:\Subversion\tradingApp\src\UserConfigBuilder\src" 
+			destdir="C:\Subversion\tradingApp\src\UserConfigBuilder\antbin">
+		</javac>
+
+		<jar destfile="C:\Subversion\tradingApp\libs\buildProperties.jar" >
+			<manifest>
+				<attribute name="Main-Class" value="com.om.tradingapp.build.ConfigFileGenerator"/>
+				<attribute name="Class-Path" value="."/>
+			</manifest>
+			<fileset dir="C:\Subversion\tradingApp\src\UserConfigBuilder\antbin"/>
+		</jar>
+		<java jar="${FlexLib-dir}\generateBuildProperties.jar" fork="true">
+			<arg value="${build.properties.file}" />
+		</java>
+		<echo>build.properties has been created</echo>
+		-->
+		<echo>Either 'build.properties' file doesn't exit, or one or more properties</echo>
+		<echo>not set correctly!</echo>
+		<echo>Please, run 'ant configure-build'</echo>
+		<fail message="${build.properties.file} has been created.  Please, re-run ant with 'configure-build' argument."/>
+	</target>
+
+	<target name="configure-build">
+		<java jar="generateBuildProperties.jar" fork="true">
+			<arg value="${build.properties.file}" />
+		</java>
+		<echo>build.properties has been created!</echo>
+		<echo>Now you may run ant against desired targets</echo>
+	</target>
+
+</project>
